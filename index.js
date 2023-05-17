@@ -11,7 +11,7 @@ app.get('/',(req,res)=>{
     res.send('job-hunter server is running')
 });
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = "mongodb+srv://jobFit:e9ossQolH0mhgwVf@cluster0.kuomool.mongodb.net/?retryWrites=true&w=majority";
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -56,6 +56,12 @@ async function run() {
         res.send(result)
     })
 
+    app.get('/uniqueJob/:id',async(req,res)=>{
+      const id=req.params.id;
+      const result=await jobCollection.findOne({_id:new ObjectId(id)});
+      res.send(result)
+    })
+
     app.get('/myjob/:email',async(req,res)=>{
         const user=req.params.email;
         const filter={email:req.params.email};
@@ -68,6 +74,34 @@ async function run() {
         body.createdAt=new Date()
         const result=await jobCollection.insertOne(body);
         res.send(result)
+    });
+
+    app.put('/uniquejob/:id',async(req,res)=>{
+      const id=req.params.id;
+      const filter={_id:new ObjectId(id)};
+      const updateData=req.body;
+      console.log(updateData)
+      const updateJob={
+        $set:{
+            title:updateData.title,
+            salary:updateData.salary,
+            vacancy:updateData.vacancy,
+            category:updateData.category,
+            status:updateData.status,
+            photoURL:updateData.photoURL,
+            skils:updateData.skils,
+            desc:updateData.desc
+        }
+      };
+      const result= await jobCollection.updateOne(filter,updateJob);
+      res.send(result)
+    })
+
+    app.delete('/uniquejob/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:new ObjectId(id)};
+      const result=await jobCollection.deleteOne(query);
+      res.send(result)
     })
 
     await client.db("admin").command({ ping: 1 });
